@@ -11,6 +11,9 @@ library(ggplot2)
 library(stringr)
 library(forcats)
 library(dplyr)
+library(treemapify)
+library(gganimate)
+library(gifski)
 
 
 # Loading the Tour de France data
@@ -260,6 +263,19 @@ dropouts %>%
        x = NULL, y = "Percentage of riders") + 
   facet_grid(~status) + 
   scale_y_continuous(labels = scales::percent) + 
+  theme_light()
+
+
+# Plot proportion of riders that did not finish the tour
+stage_data %>% 
+  filter(rank %in% c("DNS", "DNF", "OTL", "DSQ", "NQ")) %>% 
+  ggplot(aes(x = year, y = rank)) + 
+  geom_count(aes(size = after_stat(prop), group = 1), colour = "darkred") + 
+  labs(title = "Proportion of riders that did not finish the tour", 
+       x = NULL, y = "Criteria") + 
+  scale_size_area(name = "Prop", max_size = 8,
+                  # Set legend as percentage and use one decimal place
+                  labels = scales::label_percent(accuracy = 0.1)) + 
   theme_light()
 
 
@@ -535,10 +551,10 @@ ggplot(aes(x = n,
 
 
 # Draft for treemap. Aspects to fix: 
-# Merge winners for stages with shared wins (eg. c("FRA", "FRA")) and adjust 
-# subgroup_text colours
+
 tdf_stages1903_2019 %>% 
   filter(!is.na(Winner_Country)) %>% 
+  # Merge winners for stages with shared wins (eg. c("FRA", "FRA"))
   mutate(Winner_Country = case_when(
     Winner_Country == "c(\"FRA\", \"FRA\")" ~ "FRA",
     Winner_Country == "c(\"BEL\", \"BEL\")" ~ "BEL",
@@ -602,31 +618,47 @@ lengthDays %>%
   theme_light()
 
 
-# Animation attempt
+# Get the 10 riders with most points in 2017
+selection2017 <- stage_data %>%
+  filter(year == 2017) %>% 
+  group_by(rider) %>% 
+  summarise(total_points = sum(points, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  slice_max(total_points, n = 10) %>% pull(rider)
+
+
+# Animation of points, adding up per stage
 points_anim <- stage_data %>% 
   filter(year == 2017 & 
-           rider %in% c("Kittel Marcel", "Matthews Michael", 
-                        "Boasson Hagen Edvald", "Froome Chris", 
-                        "Urán Rigoberto", "Barguil Warren", 
-                        "Groenewegen Dylan", "Bardet Romain", 
-                        "Démare Arnaud", "Greipel André")) %>% 
+           rider %in% selection2017) %>% 
   group_by(rider) %>% 
   mutate(stage = as.integer(str_extract(stage_results_id, "[[:digit:]]+")), 
          points = coalesce(points, 0), 
          cumulative_points = cumsum(points)) %>% 
+  group_by(stage) %>% 
+  mutate(ordering = rank(-cumulative_points, ties.method = "first") * 1) %>% 
   ungroup() %>% 
-  ggplot() + 
-  geom_col(aes(x = cumulative_points, y = rider, fill = cumulative_points),
-           show.legend = FALSE) +
-  #Try to reorder bars
-  #geom_text(aes(x = max(cumulative_points), label = paste(rider, " ")), vjust = 0.2, hjust = 1) +
-  #coord_cartesian(clip = "off", expand = FALSE) +
-  theme_light() +
-  transition_time(stage) +
-  labs(title = "Tour de France 2017 - Stage: { frame_time }",
-       x = "Cumulative points at stage", y = "")
+  
+  ggplot(aes(x = ordering, group = rider)) + 
+  geom_tile(aes(y = cumulative_points/2, height = cumulative_points, 
+                width = 0.9, fill = rider), alpha = 0.9, show.legend = FALSE) + 
+  geom_text(aes(y = 0, label = paste(rider, " ")), vjust = 0.2, hjust = 1) + 
+  coord_flip(clip = "off", expand = FALSE) + 
+  scale_x_reverse() +
+  labs(title =  "Tour de France 2017 - Stage: {closest_state}", 
+       x = NULL, y = "Cumulative points at stage") + 
+  scale_fill_manual(values = c("#6D7696", "#59484F", "#455C4F", "#8A6E64",
+                               "#803018", "#CC5543", "#E87F60", "#EDB579", 
+                               "#E3CCA1", "#DBE6AF")) +
+  theme_light() + 
+  theme(axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        plot.margin = margin(1, 1, 1, 4, "cm")) + 
+  transition_states(stage, transition_length = 4, state_length = 1) + 
+  ease_aes('cubic-in-out')
 
-animate(points_anim, renderer = gifski_renderer())
+animate(points_anim, fps = 25, duration = 20, 
+        width = 620, height = 450, renderer = gifski_renderer())
  
 
 
