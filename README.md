@@ -9,5 +9,5 @@ riders finish on the Champs-Élysées in Paris. The modern editions of the Tour 
 and the route alternates between clockwise and counter-clockwise circuits of France.
 
 
-You can find more information about the app here:<br/>
+You can find more information about the race in the app:<br/>
 [Tour-de-France-app](https://eespe.shinyapps.io/tour-de-france-app/)
