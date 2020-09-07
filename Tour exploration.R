@@ -572,7 +572,7 @@ tdf_stages1903_2019 %>%
   geom_treemap_subgroup_border(start = "topleft", colour = "cornsilk3") + 
   geom_treemap_subgroup_text(place = "centre", alpha = 0.8, 
                              colour = "cornsilk3", fontface = "italic", 
-                             min.size = 0, start = "topleft") + 
+                             min.size = 0, reflow = TRUE, start = "topleft") + 
   geom_treemap_text(aes(label = Winner_Country), colour = "gray91", start = "topleft") + 
   scale_fill_continuous(high = "#132B43", low = "#56B1F7", name = "# of wins") +
   labs(title = "Treemap of number of stage wins per country")
@@ -627,7 +627,7 @@ selection2017 <- stage_data %>%
   slice_max(total_points, n = 10) %>% pull(rider)
 
 
-# Animation of points, adding up per stage
+# Animation of points, adding up per stage, for the riders with most points in 2017 
 points_anim <- stage_data %>% 
   filter(year == 2017 & 
            rider %in% selection2017) %>% 
@@ -646,7 +646,7 @@ points_anim <- stage_data %>%
   coord_flip(clip = "off", expand = FALSE) + 
   scale_x_reverse() +
   labs(title =  "Tour de France 2017 - Stage: {closest_state}", 
-       x = NULL, y = "Cumulative points at stage") + 
+       x = NULL, y = "Points earned") + 
   scale_fill_manual(values = c("#6D7696", "#59484F", "#455C4F", "#8A6E64",
                                "#803018", "#CC5543", "#E87F60", "#EDB579", 
                                "#E3CCA1", "#DBE6AF")) +
