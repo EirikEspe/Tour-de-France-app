@@ -1,5 +1,5 @@
 # Tour de France app
-This is a web app with statistics from Tour de France 1903-2019, created with Shiny.
+This is a web app with statistics from Tour de France 1903-2019. The app is created with Shiny and contains visualizations of overall winners, stage winners, stage chracteristics and more. 
 
 Tour de France is an annual multiple stage bicycle race primarily held in France, with occasional
 passes to nearby countries. Held over three weeks, usually in July, the Tour consists of 21 day-long stages
@@ -11,3 +11,12 @@ and the route alternates between clockwise and counter-clockwise circuits of Fra
 
 You can find more information about the race in the app:<br/>
 [Tour-de-France-app](https://eespe.shinyapps.io/tour-de-france-app/)
+
+<br/>
+
+Some of the visualizations you can find in the app:
+<p align = "middle">
+  <img src = "/tdfpoints2017.gif" width = "33%" />
+  <img src = "/Treemap_country.png" width = "33%" />
+  <img src = "/Plot_most_starts.png" width = "33%" /> 
+</p>
