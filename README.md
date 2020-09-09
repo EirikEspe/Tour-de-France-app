@@ -16,7 +16,14 @@ You can find more information about the race in the app:<br/>
 
 Some of the visualizations you can find in the app:
 <p align = "middle">
-  <img src = "/tdfpoints2017.gif" width = "33%" />
-  <img src = "/Treemap_country.png" width = "33%" />
-  <img src = "/Plot_most_starts.png" width = "33%" /> 
+  <img src = "/tdfpoints2017.gif" width = "50%" /> 
 </p>
+
+<p align = "middle">
+  <img src = "/Treemap_country.png" width = "47%" />
+  <img src = "/Plot_most_starts.png" width = "47%" />
+</p>
+
+#### Data
+The data used in this app comes from Alastair Rushworth's `tdf` package, from [Kaggle](https://www.kaggle.com/ralle360/historic-tour-de-france-dataset) and from [Wikipedia](https://en.wikipedia.org/wiki/Tour_de_France).
+I have added data for 2018-2019 to the Kaggle data.
