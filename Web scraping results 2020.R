@@ -165,11 +165,20 @@ get_results <- function(url) {
                             html_text() %>%
                             as.numeric(),
                           
-                          elapsed = lubridate::hms(as.character(
-                            time[1] +
-                              case_when(
-                                time == first(time) ~ lubridate::seconds(0),
-                                TRUE ~ time)), roll = TRUE),
+                          elapsed = case_when(
+                            time == first(time) ~ time[1],
+                            TRUE ~ time[1] + time) %>%
+                            # When adding up time we might get output above 60 seconds.
+                            # In order to roll seconds above 60 over to minutes, and
+                            # minutes above 60 to hours, we will use the roll argument
+                            # in the hms function (notice that hms takes
+                            # character or numeric vectors and input with the specified
+                            # number of hours, minutes, and seconds. Hence the 
+                            # as.character conversion). 
+                            {if_else(lubridate::hour(.) == 0, 
+                                     str_c("0H ", .), 
+                                     as.character(.))} %>%
+                            lubridate::hms(roll = TRUE),
                           
                           bib_number = read_html(url) %>% 
                             html_nodes("div:nth-child(3) td:nth-child(4)") %>% 
@@ -180,7 +189,6 @@ get_results <- function(url) {
 }
 
 
- 
 
 # Urls for first five stages
 urltest <- glue::glue("https://www.procyclingstats.com/race/tour-de-france/2020/stage-{1:5}")
