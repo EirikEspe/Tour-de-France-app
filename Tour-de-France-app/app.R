@@ -31,17 +31,48 @@ tdf_stages <- readr::read_csv(paste('https://raw.githubusercontent.com/',
                                      'rfordatascience/tidytuesday/master/',
                                      'data/2020/2020-04-07/tdf_stages.csv', sep = ""))
 
-# Load tdf stages data for 2018 and 2019.
+
+# Add winner of 2020 edition
+tdf_winners <- bind_rows(tdf_winners, 
+                         tibble(
+                             edition = 107, start_date = as.Date("2020-08-29"), 
+                             winner_name = "Tadej Pogačar", winner_team = "UAE Team Emirates", 
+                             distance = 3484.2, time_overall = 87 + 20/60 + 5/(60*60), 
+                             time_margin = 59 / (60*60), stage_wins = 3, stages_led = 1, 
+                             height = 1.76, weight = 66, age = 21, born = as.Date("1998-09-21"), 
+                             died = NA, full_name = "Tadej Pogačar", nickname = "Pogi", 
+                             birth_town = "Komenda", birth_country = "Slovenia", 
+                             nationality = "Slovenia"))
+
+
+# Read the stage_data of 2020 edition (see the script 'Web scraping results 2020.R')
+stage_data2020 <- readRDS("stage_data2020.rds")
+
+
+# Add stage data of 2020 edition to the stage_data dataframe.
+## In order to get the scraped 2020 data in the same format as the 
+stage_data <- bind_rows(stage_data,
+          # The stage_data dataset contains the time columns as character type, and includes
+          #  the last part of the total time (the element that is counting seconds).
+          # In the scraped 2020 data, the time columns are of type period (from the 
+          #   (lubridate package). In order to combine the dataframes, we have to extract
+          # the number of seconds from the time objects.
+          stage_data2020 %>% mutate(across(c(time, elapsed),
+                                           ~ str_extract(., "[[:digit:]]+S$"))))
+
+# Load tdf stages data for 2018 and 2020.
 # Convert Stage column to character and Date column to date using col_types, 
 # to comply with tdf_stages
-tdf_stages2018_2019 <- readr::read_csv2("tdf_stages2018-2019.csv", 
+tdf_stages2018_2020 <- readr::read_csv2("tdf_stages2018-2020.csv", 
                                         col_types = readr::cols(
                                             Stage = readr::col_character(),
                                             Date = readr::col_date("%d.%m.%Y")))
 
 
-# Update tdf_stages with data for 2018 and 2019
-tdf_stages1903_2019 <- bind_rows(tdf_stages2018_2019, tdf_stages)
+# Update tdf_stages with data for 2018 to 2020
+tdf_stages1903_2020 <- bind_rows(tdf_stages2018_2020, tdf_stages)
+
+
 
 
 # Creating an alternative function for 'dateRangeInput()', to add the opportunity
@@ -64,23 +95,16 @@ ui <- fluidPage(
     theme = shinytheme("sandstone"),
 
     # Create top level navigation bar, and set the application title 
-    navbarPage("Tour de France 1903 - 2019",
+    navbarPage("Tour de France 1903 - 2020",
                
                
 #--- Navbar Winners----  
 
     # Navbar tab names 'winners'
     tabPanel("Winners",
-    # Sidebar with a slider input for number of bins,
-    # calendar input for years and drop-down list of countries.         
+    # Sidebar with calendar input for years and drop-down list of countries.         
     sidebarLayout(
         sidebarPanel(
-            
-            #sliderInput("bins",
-            #            "Number of bins:",
-            #            min = 1,
-            #            max = 50,
-            #            value = 30),
             
             dateRangeInput2("year", "Select year",
                             start = min(tdf_winners$start_date),
@@ -149,7 +173,7 @@ ui <- fluidPage(
                          fluidRow(paste("If we look at the last 40 years, we can", 
                                         "see that the overall Tour de France victories", 
                                         "have been more evenly distributed. From 1980", 
-                                        "to 2019, France has won 5 tours, and Belgium",
+                                        "to 2020, France has won 5 tours, and Belgium",
                                         "has won 0, while other countries have been",
                                         "taking over. Last time a rider from", 
                                         "France won the title was in 1985."))),
@@ -504,7 +528,7 @@ ui <- fluidPage(
                                            tags$br(), tags$br(),
                                            paste("Below you can find an animation of",
                                                  "points classification for a given", 
-                                                 "year between 2000 and 2019."), tags$br(),
+                                                 "year between 2000 and 2020."), tags$br(),
                                            paste("Notice that the points given here",
                                                  "are not identical to the official", 
                                                  "points classification."),tags$br(),
@@ -518,7 +542,7 @@ ui <- fluidPage(
                                   tags$br(),
                                   sliderInput("animYear", 
                                               "Select year for points animation",
-                                              min = 2000, max = 2019, 
+                                              min = 2000, max = 2020, 
                                               value = 2017, sep = ""),
                                   HTML(paste("<b>Click animate to create animation</b>")),
                                   tags$br(),
@@ -602,7 +626,7 @@ server <- function(input, output, session) {
     
     #Reactive expression for stage type
     stage_type <- reactive({
-        tdf_stages1903_2019 %>% 
+        tdf_stages1903_2020 %>% 
             mutate(Category = case_when(
                 Type %in% c("Plain stage", "Flat stage", "Flat Stage",
                         "Flat cobblestone stage", 
@@ -673,7 +697,7 @@ server <- function(input, output, session) {
             mutate(period = case_when(
                 lubridate::year(start_date) <= 1914 ~ "1903-1914",
                 between(lubridate::year(start_date), 1919, 1939) ~ "1919-1939",
-                TRUE ~ "1947-2019"))
+                TRUE ~ "1947-2020"))
     })
         
     
@@ -914,7 +938,7 @@ server <- function(input, output, session) {
                 ungroup() %>% 
                 mutate(period = case_when(year <= 1914  ~ "1903-1914",
                                           between(year, 1919, 1939) ~ "1919-1939",
-                                          TRUE ~ "1947-2019")) %>%
+                                          TRUE ~ "1947-2020")) %>%
                 
                 # Plot the output
                 ggplot(aes(x = year)) + 
@@ -943,14 +967,14 @@ server <- function(input, output, session) {
                 ungroup() %>% 
                 mutate(period = case_when(year <= 1914  ~ "1903-1914",
                                           between(year, 1919, 1939) ~ "1919-1939",
-                                          TRUE ~ "1947-2019")) %>% 
+                                          TRUE ~ "1947-2020")) %>% 
                 
                 # Plot the output
                 ggplot(aes(x = year)) + 
                 geom_line(aes(y = stages, group = period), colour = "dodgerblue3") + 
                 geom_col(aes(y = split_stages), fill = "dodgerblue3") +
                 labs(title = paste("Number of stages for each edition of",
-                                   "Tour de France 1903 - 2019"), 
+                                   "Tour de France 1903 - 2020"), 
                      x = "Year", y = "Number of stages") +
                 annotate(geom = "label", x = 1953, y = 11, 
                          label = "Split stages", 
@@ -963,7 +987,7 @@ server <- function(input, output, session) {
     
     
     output$n_days <- renderPlot({
-        tdf_stages1903_2019 %>% 
+        tdf_stages1903_2020 %>% 
             group_by(year = lubridate::year(Date)) %>% 
             summarise(days = as.integer(last(Date) - first(Date) + 1)) %>% 
             ungroup() %>% 
@@ -1022,7 +1046,7 @@ server <- function(input, output, session) {
     
     # Table with Grands Départs
     output$GD <- DT::renderDataTable({
-        tdf_stages1903_2019 %>% 
+        tdf_stages1903_2020 %>% 
             group_by(year = lubridate::year(Date)) %>% 
             filter(case_when(
                 year %in% c(1955, 1960, 1961, 1965, 1967, 1968) ~ Stage == "1a",
@@ -1048,7 +1072,7 @@ server <- function(input, output, session) {
     
     
     output$hostCities <- renderPlot({
-        tdf_stages1903_2019 %>% 
+        tdf_stages1903_2020 %>% 
             tidyr::pivot_longer(cols = Origin:Destination, 
                                 names_to = "Host", values_to = "City") %>% 
             count(City, sort = TRUE, name = "visits") %>% 
@@ -1060,13 +1084,13 @@ server <- function(input, output, session) {
             ### how many times each city hosted starts and finishes
             
             # Concatenate number of times as a start city
-            inner_join(tdf_stages1903_2019 %>% 
+            inner_join(tdf_stages1903_2020 %>% 
                            count(Origin, sort = TRUE, name = "start") %>% 
                            ungroup() %>% 
                            slice_max(start, n = 10), by = c("City" = "Origin")) %>% 
             
             # Concatenate number of times the city hosted the finish
-            inner_join(tdf_stages1903_2019 %>% 
+            inner_join(tdf_stages1903_2020 %>% 
                            count(Destination, sort = TRUE, name = "finish") %>% 
                            ungroup() %>% 
                            slice_max(finish, n = 10), by = c("City" = "Destination")) %>%
@@ -1088,7 +1112,7 @@ server <- function(input, output, session) {
     }, res = 96)
     
     output$hostStart <- renderTable({
-        tdf_stages %>% 
+        tdf_stages1903_2020 %>% 
             count(Origin, sort = TRUE) %>% 
             slice(1:10) %>%
             ungroup() %>% 
@@ -1096,7 +1120,7 @@ server <- function(input, output, session) {
     })
     
     output$hostFinish <- renderTable({
-        tdf_stages %>% 
+        tdf_stages1903_2020 %>% 
             count(Destination, sort = TRUE) %>% 
             slice(1:10) %>% 
             ungroup() %>% 
@@ -1104,7 +1128,7 @@ server <- function(input, output, session) {
     })
     
     output$stageFreq <- renderTable({
-        tdf_stages %>% 
+        tdf_stages1903_2020 %>% 
             count(Origin, Destination, sort = TRUE) %>% 
             slice(1:10) %>% 
             ungroup() %>% 
@@ -1178,7 +1202,7 @@ server <- function(input, output, session) {
     }, res = 96)
     
     output$mostStageWins <- renderPlot({
-        tdf_stages1903_2019 %>%
+        tdf_stages1903_2020 %>%
             filter(between(lubridate::year(Date),
                            lubridate::year(input$year3[[1]]),
                            lubridate::year(input$year3[[2]]))) %>% 
@@ -1198,7 +1222,7 @@ server <- function(input, output, session) {
     }, res = 96)
     
     output$WinsPerYear <- DT::renderDataTable({
-        tdf_stages1903_2019 %>% 
+        tdf_stages1903_2020 %>% 
             group_by(Year = lubridate::year(Date)) %>%
             filter(between(lubridate::year(Date),
                            lubridate::year(input$year3[[1]]),
@@ -1241,7 +1265,7 @@ server <- function(input, output, session) {
     }, res = 96)
     
     
-    # Get the 10 riders with most points for a given year between 2000 and 2019
+    # Get the 10 riders with most points for a given year between 2000 and 2020
     selection <- reactive({ stage_data %>% 
         filter(year == input$animYear) %>% 
         group_by(rider) %>% 
